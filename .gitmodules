@@ -1,0 +1,7 @@
+[submodule "skopeo"]
+	path = skopeo
+	url = https://github.com/containers/skopeo.git
+	branch = release-1.15
+[submodule "docker-image-store-gen"]
+	path = docker-image-store-gen
+	url = https://github.com/extinctpotato/docker-image-store-gen.git
