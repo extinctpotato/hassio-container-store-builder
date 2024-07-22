@@ -1,14 +1,14 @@
 GO ?= go
 JQ ?= jq
 
-DL_DIR ?= dl
+OUT_DIR ?= out
 ARCH ?= aarch64
 MACHINE ?= raspberrypi4-64
-TARGET_DIR = $(DL_DIR)/$(ARCH)/$(MACHINE)
-CONTAINERS := $(foreach container,$(shell $(JQ) -r '.images | keys | join(" ")' stable.json),$(DL_DIR)/$(ARCH)/$(MACHINE)/$(container).tar)
+CONTAINER_DIR = $(OUT_DIR)/$(ARCH)/$(MACHINE)
+CONTAINERS := $(foreach container,$(shell $(JQ) -r '.images | keys | join(" ")' stable.json),$(CONTAINER_DIR)/$(container).tar)
 
-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
-	docker-image-store-gen/disg -unshare -tarpath $(TARGET_DIR) -path dist -out $@
+$(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
+	docker-image-store-gen/disg -unshare -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist -out $@
 
 skopeo/bin/skopeo:
 	$(MAKE) -C skopeo bin/skopeo
@@ -16,7 +16,7 @@ skopeo/bin/skopeo:
 docker-image-store-gen/disg:
 	cd docker-image-store-gen && $(GO) build ./cmd/disg
 
-$(TARGET_DIR)/%.tar: skopeo/bin/skopeo
+$(CONTAINER_DIR)/%.tar: skopeo/bin/skopeo
 	mkdir -p $(@D)
 	./fetch-container-image.sh $(ARCH) $(MACHINE) stable.json $(@D) $*
 
