@@ -29,14 +29,14 @@ arch=$1
 machine=$2
 version_json=$3
 dl_dir=$4
-dst_dir=$5
+container=$5
 
 __version_json() {
     jq '.core = "landingpage"' "$version_json"
 }
 
 __fetch_container_image() {
-    local image_json_name image_name image_tag full_image_name image_digest image_file_name image_file_path dst_image_file_path
+    local image_json_name image_name image_tag full_image_name image_digest image_file_name image_file_path
 
     image_json_name=$1
     image_name=$(jq -e -r --arg image_json_name "${image_json_name}" \
@@ -52,13 +52,12 @@ __fetch_container_image() {
     # Cleanup image name file name use
     image_file_name="${full_image_name//[:\/]/_}@${image_digest//[:\/]/_}"
     image_file_path="${dl_dir}/${image_file_name}.tar"
-    dst_image_file_path="${dst_dir}/${image_file_name}.tar"
-
+    final_image_file_path="${dl_dir}/${container}.tar"
 
     (
         # Use file locking to avoid race condition
         flock --verbose 3
-        if [ ! -f "${image_file_path}" ]
+        if [ ! -f "${final_image_file_path}" ]
         then
             echo "Fetching image: ${full_image_name} (digest ${image_digest})"
             skopeo copy "docker://${image_name}@${image_digest}" "docker-archive:${image_file_path}:${full_image_name}"
@@ -66,10 +65,10 @@ __fetch_container_image() {
             echo "Skipping download of existing image: ${full_image_name} (digest ${image_digest})"
         fi
 
-        cp "${image_file_path}" "${dst_image_file_path}"
+        mv "${image_file_path}" "${dl_dir}/${container}.tar"
     ) 3>"${image_file_path}.lock"
 }
 
 set -x
 
-for i in $(jq -r '.images | keys[]' stable.json); do __fetch_container_image "$i"; done
+__fetch_container_image "$container"
