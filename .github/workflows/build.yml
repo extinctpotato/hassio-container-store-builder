@@ -1,0 +1,42 @@
+on:
+  push:
+
+jobs:
+  make_store:
+    strategy:
+      matrix:
+        conf:
+          - arch: aarch64
+            machine: raspberrypi4-64
+          - arch: aarch64
+            machine: qemuarm-64
+          - arch: amd64
+            machine: generic-x86-64
+    env:
+      MACHINE: "${{ matrix.conf.machine }}"
+      ARCH: "${{ matrix.conf.arch }}"
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm-backports
+      options: --privileged
+      volumes:
+        - /__w 
+    steps:
+      - name: Install dependencies
+        run: |-
+          apt -qqy update && \
+            apt -qqy --no-install-recommends install ca-certificates make golang-1.22 git jq xz-utils && \
+            ln -s /usr/lib/go-1.22/bin/go /usr/bin/go
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - run: make
+        env:
+          DISG_NO_UNSHARE: y
+      - run: xz out/$ARCH-$MACHINE-distro.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "${{ matrix.conf.arch }}-${{ matrix.conf.machine }}--hassio-store"
+          path: out/*.tar.xz
+          retention-days: 1
