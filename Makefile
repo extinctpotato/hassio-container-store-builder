@@ -11,14 +11,18 @@ $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/d
 	docker-image-store-gen/disg -unshare -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist -out $@
 
 skopeo/bin/skopeo:
-	$(MAKE) -C skopeo bin/skopeo
+	DISABLE_DOCS=1 \
+		     BUILDTAGS=containers_image_openpgp \
+		     GOFLAGS="-buildvcs=false" \
+		     EXTRA_LDFLAGS="-X=github.com/containers/image/v5/signature.systemDefaultPolicyPath=$(PWD)/skopeo/default-policy.json" \
+		     $(MAKE) -C skopeo bin/skopeo
 
 docker-image-store-gen/disg:
 	cd docker-image-store-gen && $(GO) build ./cmd/disg
 
 $(CONTAINER_DIR)/%.tar: skopeo/bin/skopeo
 	mkdir -p $(@D)
-	./fetch-container-image.sh $(ARCH) $(MACHINE) stable.json $(@D) $*
+	PATH=$(PATH):$(PWD)/skopeo/bin ./fetch-container-image.sh $(ARCH) $(MACHINE) stable.json $(@D) $*
 
 .PHONY: list-containers
 list-containers:
