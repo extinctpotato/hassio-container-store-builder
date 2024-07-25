@@ -61,11 +61,10 @@ __fetch_container_image() {
         then
             echo "Fetching image: ${full_image_name} (digest ${image_digest})"
             skopeo copy "docker://${image_name}@${image_digest}" "docker-archive:${image_file_path}:${full_image_name}"
+            mv "${image_file_path}" "${dl_dir}/${container}.tar"
         else
             echo "Skipping download of existing image: ${full_image_name} (digest ${image_digest})"
         fi
-
-        mv "${image_file_path}" "${dl_dir}/${container}.tar"
     ) 3>"${image_file_path}.lock"
 }
 
