@@ -7,8 +7,18 @@ MACHINE ?= raspberrypi4-64
 CONTAINER_DIR = $(OUT_DIR)/$(ARCH)/$(MACHINE)
 CONTAINERS := $(foreach container,$(shell $(JQ) -r '.images | keys | join(" ")' stable.json),$(CONTAINER_DIR)/$(container).tar)
 
+DISG_OPTIONS =
+# Mainly useful in the context of running in CI environments where (very likely):
+#
+#  1) we're already running as the root user,
+#  2) we're inside a container (i.e. the nested namespace situation -- not impossible to pull off, just finicky).
+#
+ifneq ($(DISG_NO_UNSHARE), y)
+	DISG_OPTIONS += -unshare
+endif
+
 $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
-	docker-image-store-gen/disg -unshare -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist -out $@
+	docker-image-store-gen/disg -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist $(DISG_OPTIONS) -out $@
 
 skopeo/bin/skopeo:
 	DISABLE_DOCS=1 \
@@ -18,7 +28,7 @@ skopeo/bin/skopeo:
 		     $(MAKE) -C skopeo bin/skopeo
 
 docker-image-store-gen/disg:
-	cd docker-image-store-gen && $(GO) build ./cmd/disg
+	cd docker-image-store-gen && GOFLAGS="-buildvcs=false" $(GO) build ./cmd/disg
 
 $(CONTAINER_DIR)/%.tar: skopeo/bin/skopeo
 	mkdir -p $(@D)
