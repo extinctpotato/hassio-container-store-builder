@@ -40,3 +40,29 @@ jobs:
           name: "${{ matrix.conf.arch }}-${{ matrix.conf.machine }}--hassio-store"
           path: out/*.tar.xz
           retention-days: 1
+
+  upload_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    needs: make_store
+    container: debian:bookworm
+    steps:
+      - name: Install dependencies
+        run: |
+          set -x
+          apt -qqy update && \
+          apt -qqy --no-install-recommends install ca-certificates npm git tree && \
+          npm install --global conventional-changelog-conventionalcommits@6 @semantic-release/git semantic-release@22
+      - uses: actions/checkout@v4
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*--hassio-store"
+          merge-multiple: true
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE
+      - run: semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
