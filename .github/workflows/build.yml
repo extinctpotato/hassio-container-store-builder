@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |-
           apt -qqy update && \
-            apt -qqy --no-install-recommends install ca-certificates make golang-1.22 git jq xz-utils && \
+            apt -qqy --no-install-recommends install ca-certificates make golang-1.22 git jq xz-utils libguestfs-tools linux-image-amd64 && \
             ln -s /usr/lib/go-1.22/bin/go /usr/bin/go
 
       - uses: actions/checkout@v4
@@ -34,11 +34,10 @@ jobs:
       - run: make
         env:
           DISG_NO_UNSHARE: y
-      - run: xz out/$ARCH-$MACHINE-distro.tar
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ matrix.conf.arch }}-${{ matrix.conf.machine }}--hassio-store"
-          path: out/*.tar.xz
+          path: out/*.img.xz
           retention-days: 1
 
   upload_release:

@@ -17,6 +17,10 @@ ifneq ($(DISG_NO_UNSHARE), y)
 	DISG_OPTIONS += -unshare
 endif
 
+$(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.img.xz: $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar
+	virt-make-fs -t ext4 -s 2G $< $(basename $@) 
+	xz $(basename $@)
+
 $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
 	docker-image-store-gen/disg -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist $(DISG_OPTIONS) -out $@
 
