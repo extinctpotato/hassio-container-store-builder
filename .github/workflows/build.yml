@@ -21,6 +21,8 @@ jobs:
       options: --privileged
       volumes:
         - /__w 
+        - /boot
+        - /lib/modules
     steps:
       - name: Install dependencies
         run: |-
