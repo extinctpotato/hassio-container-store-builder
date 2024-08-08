@@ -25,8 +25,10 @@ jobs:
       - name: Install dependencies
         run: |-
           apt -qqy update && \
-            apt -qqy --no-install-recommends install ca-certificates make golang-1.22 git jq xz-utils guestfs-tools && \
+            apt -qqy --no-install-recommends install ca-certificates make golang-1.22 git jq xz-utils libguestfs-tools && \
             ln -s /usr/lib/go-1.22/bin/go /usr/bin/go
+
+      - run: libguestfs-test-tool
 
       - uses: actions/checkout@v4
         with:
