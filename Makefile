@@ -22,7 +22,7 @@ $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.img.xz: $(OUT_DIR)/$(ARCH)-$(MACHINE)-distr
 	xz $(basename $@)
 
 $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
-	docker-image-store-gen/disg -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist $(DISG_OPTIONS) -out $@
+	docker-image-store-gen/disg -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist $(DISG_OPTIONS) -taglatest -out $@
 
 skopeo/bin/skopeo:
 	DISABLE_DOCS=1 \
