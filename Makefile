@@ -5,6 +5,8 @@ OUT_DIR ?= out
 ARCH ?= aarch64
 MACHINE ?= raspberrypi4-64
 CONTAINER_DIR = $(OUT_DIR)/$(ARCH)/$(MACHINE)
+DOCKER_DIST_DIR = $(CONTAINER_DIR)/dist
+APPARMOR_FILE = $(DOCKER_DIST_DIR)/supervisor/apparmor/hassio-supervisor
 CONTAINERS := $(foreach container,$(shell $(JQ) -r '.images | keys | join(" ")' stable.json),$(CONTAINER_DIR)/$(container).tar)
 
 DISG_OPTIONS =
@@ -21,8 +23,17 @@ $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.img.xz: $(OUT_DIR)/$(ARCH)-$(MACHINE)-distr
 	virt-make-fs -t ext4 -s 2G $< $(basename $@) 
 	xz $(basename $@)
 
-$(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(CONTAINERS) docker-image-store-gen/disg
-	docker-image-store-gen/disg -tarpath $(CONTAINER_DIR) -path $(CONTAINER_DIR)/dist $(DISG_OPTIONS) -taglatest -out $@
+$(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(APPARMOR_FILE) $(CONTAINERS) docker-image-store-gen/disg
+	docker-image-store-gen/disg $(DISG_OPTIONS) \
+		-tarpath $(CONTAINER_DIR) \
+		-path $(DOCKER_DIST_DIR)/docker \
+		-tar-src-override $(DOCKER_DIST_DIR) \
+		-taglatest \
+		-out $@
+
+$(APPARMOR_FILE): apparmor.txt
+	mkdir -p $(@D)
+	cp $< $@  
 
 skopeo/bin/skopeo:
 	DISABLE_DOCS=1 \
