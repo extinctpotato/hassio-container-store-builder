@@ -32,7 +32,7 @@ dl_dir=$4
 container=$5
 
 __version_json() {
-    jq '.core = "landingpage"' "$version_json"
+    jq '.core = "2024.6.4"' "$version_json"
 }
 
 __fetch_container_image() {

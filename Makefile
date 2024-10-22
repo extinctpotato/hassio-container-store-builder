@@ -20,7 +20,7 @@ ifneq ($(DISG_NO_UNSHARE), y)
 endif
 
 $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.img.xz: $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar
-	virt-make-fs -t ext4 -s 2G --label=hassos-data $< $(basename $@) 
+	virt-make-fs -t ext4 -s 3G --label=hassos-data $< $(basename $@) 
 	xz $(basename $@)
 
 $(OUT_DIR)/$(ARCH)-$(MACHINE)-distro.tar: $(APPARMOR_FILE) $(CONTAINERS) docker-image-store-gen/disg
